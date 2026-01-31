@@ -1,9 +1,10 @@
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 
 class Role(BaseModel):
     """Role model representing user roles."""
     
-    id: str
+    id: Optional[str] = None
     name: str
     permissions: list[str]
 
@@ -13,5 +14,5 @@ class User(BaseModel):
     id: str
     email: EmailStr
     password_hash: str
-    is_active: bool = True
+    is_active: bool
     roles: list[Role] = []
