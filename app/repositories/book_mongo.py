@@ -4,9 +4,9 @@ from typing import Any
 class BookMongoRepository:
     """Repository for managing Book entities in MongoDB."""
 
-    def __init__(self, mongo_client: Any):
+    def __init__(self, collection: Any):
         """Initialize the repository with a MongoDB client."""
-        self.collection = mongo_client.db.books
+        self.collection = collection
 
     def add_book(self, book: Book) -> str:
         """Add a new book to the collection."""
