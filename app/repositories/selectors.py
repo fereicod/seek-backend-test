@@ -3,7 +3,7 @@ from app.repositories.book_mongo import BookMongoRepository
 from app.repositories.user_mongo import UserMongoRepository
 
 def get_book_repository() -> BookMongoRepository:
-    return BookMongoRepository(books_collection)
+    return BookMongoRepository(collection=books_collection)
 
 def get_user_repository() -> UserMongoRepository:
-    return UserMongoRepository(users_collection)
+    return UserMongoRepository(collection=users_collection)
