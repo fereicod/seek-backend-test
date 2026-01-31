@@ -11,9 +11,14 @@ def login(credentials: LoginRequest) -> TokenResponse:
     """Authenticate user and return access token."""
 
     user_repo = get_user_repository()
-    user = user_repo.get_user_by_email(credentials.email)
+    user = user_repo.get_user_by_email(
+        email=credentials.email
+    )
 
-    if not user or not verify_password(credentials.password, user.password_hash):
+    if not user or not verify_password(
+        plain_password=credentials.password, 
+        hashed_password=user.password_hash
+    ):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
     access_token = create_access_token(
