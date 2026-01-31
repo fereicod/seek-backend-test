@@ -1,14 +1,21 @@
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jwt import PyJWTError, decode
 from app.core.config import settings
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+bearer_scheme = HTTPBearer()
 
-def get_current_token(token: str = Depends(oauth2_scheme)) -> dict:
+
+def get_current_token(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> dict:
     """Decode and validate the JWT token from the Authorization header."""
     try:
-        return decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        return decode(
+            credentials.credentials,
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+        )
     except PyJWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
