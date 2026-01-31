@@ -3,7 +3,7 @@ from app.core.config import settings
 
 # MongoDB Client Setup
 client = MongoClient(settings.MONGO_URI)
-db = client[settings.MONGO_DB_NAME]
+db = client[settings.DB_NAME]
 
 # Collections
 users_collection = db["users"]
