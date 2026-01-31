@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from jwt import encode, decode, ExpiredSignatureError, InvalidTokenError
+from jwt import encode
 from passlib.context import CryptContext
 from app.core.config import settings
 
