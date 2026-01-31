@@ -1,13 +1,13 @@
 from fastapi import APIRouter, HTTPException
-from app.schemas.auth import LoginRequest
+from app.schemas.auth import LoginRequest, TokenResponse
 from app.core.security import verify_password, create_access_token
 from app.repositories.selectors import get_user_repository
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
-@router.post("/login")
-def login(credentials: LoginRequest) -> dict:
+@router.post("/login", response_model=TokenResponse)
+def login(credentials: LoginRequest) -> TokenResponse:
     """Authenticate user and return access token."""
 
     user_repo = get_user_repository()
@@ -23,4 +23,4 @@ def login(credentials: LoginRequest) -> dict:
             "permissions": [perm for role in user.roles for perm in role.permissions],
         },
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return TokenResponse(access_token=access_token)
