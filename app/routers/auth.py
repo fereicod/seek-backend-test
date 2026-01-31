@@ -10,15 +10,15 @@ def login(email: str, password: str) -> dict:
 
     user_repo = get_user_repository()
     user = user_repo.get_user_by_email(email)
-    
-    if not user or not verify_password(password, user.hashed_password):
+
+    if not user or not verify_password(password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
     access_token = create_access_token(
         subject=user.id,
         claims={
-            "roles": [role["name"] for role in user["roles"]],
-            "permissions": [perm for role in user["roles"] for perm in role["permissions"]]
+            "roles": [role.name for role in user.roles],
+            "permissions": [perm for role in user.roles for perm in role.permissions]
         }
     )
     return {"access_token": access_token}
