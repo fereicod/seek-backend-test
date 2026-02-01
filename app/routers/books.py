@@ -11,6 +11,8 @@ from app.schemas.book import (
     SuccessResponse,
     SortField,
     SortOrder,
+    AveragePriceByYearResponse,
+    AveragePriceByYear,
 )
 
 router = APIRouter(prefix="/books", tags=["Books"])
@@ -55,7 +57,29 @@ def list_books_page(
     return Page.create(items=books, params=params, total=total)
 
 
+@router.get(
+    "/stats/average-price-by-year",
+    response_model=AveragePriceByYearResponse,
+    dependencies=[Depends(require_permission("book:read"))],
+)
+def get_average_price_by_year(
+    year: int | None = Query(None, description="Filter by specific year (optional)"),
+) -> AveragePriceByYearResponse:
+    """
+    Get average book price grouped by publication year.
+    
+    Uses MongoDB aggregation pipeline to calculate:
+    - Average price per year
+    - Number of books per year
+    
+    **All years**: GET /stats/average-price-by-year\n
+    **Specific year**: GET /stats/average-price-by-year?year=2023
+    """
     book_repo = get_book_repository()
+    results = book_repo.get_average_price_by_year(year=year)
+    
+    data = [AveragePriceByYear(**item) for item in results]
+    return AveragePriceByYearResponse(data=data)
 
 
 @router.get("/{book_id}", response_model=BookResponse, dependencies=[Depends(require_permission("book:read"))])
@@ -106,3 +130,4 @@ def delete_book(book_id: str) -> SuccessResponse:
     success = book_repo.delete_book(book_id=book_id)
 
     return SuccessResponse(success=success)
+
