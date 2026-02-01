@@ -57,3 +57,15 @@ class CursorPageResponse(BaseModel):
     items: list[BookResponse]
     next_cursor: str | None = None
     has_more: bool = False
+
+
+class AveragePriceByYear(BaseModel):
+    """Average price for a specific year."""
+    year: int
+    average_price: float
+    book_count: int
+
+
+class AveragePriceByYearResponse(BaseModel):
+    """Response schema for average price by year aggregation."""
+    data: list[AveragePriceByYear]
