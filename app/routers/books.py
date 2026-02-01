@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, Query
 from fastapi_pagination import Page, Params
 from app.core.dependencies import require_permission
 from app.repositories.selectors import get_book_repository
-from app.schemas.book import BookRequest, BookPatchRequest, BookResponse, BookMutationResponse, SuccessResponse
 from app.schemas.book import (
     BookRequest,
     BookPatchRequest,
@@ -16,7 +15,7 @@ from app.schemas.book import (
 router = APIRouter(prefix="/books", tags=["Books"])
 
 @router.get(
-    "/vp1",
+    "/",
     response_model=Page[BookResponse],
     dependencies=[Depends(require_permission("book:read"))],
 )
