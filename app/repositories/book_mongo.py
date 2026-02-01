@@ -67,10 +67,34 @@ class BookMongoRepository:
         result = self.collection.delete_one({"_id": ObjectId(book_id)})
         return result.deleted_count > 0
 
-    # ToDo: Implement additional methods as needed, e.g., list all books, skip, limit, aggregate functions, etc.
-    def list_books(self) -> list[Book]:
-        """List all books in the collection."""
-        books = self.collection.find()
+    def count_books(
+        self,
+        author: str | None = None,
+        title: str | None = None,
+        genre: str | None = None,
+    ) -> int:
+        """Count total number of books matching filters."""
+        query = self._build_filter_query(author=author, title=title, genre=genre)
+        return self.collection.count_documents(query)
+
+    def list_books_paginated(
+        self,
+        skip: int = 0,
+        limit: int = 10,
+        sort_by: str | None = None,
+        sort_order: str = "asc",
+        author: str | None = None,
+        title: str | None = None,
+        genre: str | None = None,
+    ) -> list[Book]:
+        """
+        List books with skip/limit pagination, sorting and filtering.
+        Used by Page and LimitOffset pagination.
+        """
+        query = self._build_filter_query(author=author, title=title, genre=genre)
+        sort = self._build_sort(sort_by=sort_by, sort_order=sort_order)
+
+        books = self.collection.find(query).sort(sort).skip(skip).limit(limit)
         return [self._to_book(book) for book in books]
     
     def average_price_by_year(self, year: int) -> float:
