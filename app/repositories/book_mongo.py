@@ -16,6 +16,41 @@ class BookMongoRepository:
         book_data["id"] = str(book_data.pop("_id"))
         return Book(**book_data)
 
+    def _build_filter_query(
+        self,
+        author: str | None = None,
+        title: str | None = None,
+        genre: str | None = None,
+    ) -> dict:
+        """
+        Build MongoDB filter query from optional parameters.
+        Uses regex for partial, case-insensitive matching.
+        """
+        query = {}
+        if author:
+            query["author"] = {"$regex": re.escape(author), "$options": "i"}
+        if title:
+            query["title"] = {"$regex": re.escape(title), "$options": "i"}
+        if genre:
+            query["genre"] = {"$regex": re.escape(genre), "$options": "i"}
+        return query
+
+    def _build_sort(
+        self,
+        sort_by: str | None = None,
+        sort_order: str = "asc",
+    ) -> list[tuple[str, int]]:
+        """
+        Build MongoDB sort specification.
+        Returns list of tuples: [(field, direction), ...]
+        """
+        if not sort_by:
+            return [("_id", 1)]  # Default sort by _id ascending
+
+        direction = 1 if sort_order == "asc" else -1
+        # Always add _id as secondary sort for consistency
+        return [(sort_by, direction), ("_id", direction)]
+
     def get_book_by_id(self, book_id: str) -> Book | None:
         """Retrieve a book by its ID."""
         book_data = self.collection.find_one({"_id": ObjectId(book_id)})
