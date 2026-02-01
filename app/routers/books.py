@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query
-from fastapi_pagination import Page, Params
+from fastapi_pagination import Params
+from fastapi_pagination.links import Page
 from app.core.dependencies import require_permission
 from app.repositories.selectors import get_book_repository
 from app.schemas.book import (
