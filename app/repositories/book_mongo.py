@@ -133,11 +133,49 @@ class BookMongoRepository:
         books = self.collection.find(query).sort(sort).skip(skip).limit(limit)
         return [self._to_book(book) for book in books]
     
-    def average_price_by_year(self, year: int) -> float:
-        """Calculate the average price of books published in a given year."""
-        pipeline = [
-            {"$match": {"published_date": {"$gte": f"{year}-01-01", "$lt": f"{year+1}-01-01"}}},
-            {"$group": {"_id": None, "average_price": {"$avg": "$price"}}}
-        ]
-        result = list(self.collection.aggregate(pipeline))
-        return float(result[0]['average_price']) if result else 0.0
+    def get_average_price_by_year(self, year: int | None = None) -> list[dict]:
+        """
+        Calculate the average price of books grouped by publication year.
+        Uses MongoDB aggregation pipeline with $year operator.
+        
+        Args:
+            year: Optional filter for a specific year. If None, returns all years.
+        
+        Returns:
+            List of dicts with year, average_price, and book_count.
+        """
+        pipeline = []
+        
+        # Optional filter by specific year
+        if year is not None:
+            pipeline.append({
+                "$match": {
+                    "$expr": {
+                        "$eq": [{"$year": "$published_date"}, year]
+                    }
+                }
+            })
+        
+        # Group by year extracted from published_date
+        pipeline.append({
+            "$group": {
+                "_id": {"$year": "$published_date"},
+                "average_price": {"$avg": "$price"},
+                "book_count": {"$sum": 1}
+            }
+        })
+        
+        # Sort by year descending (most recent first)
+        pipeline.append({"$sort": {"_id": -1}})
+        
+        # Project to rename _id to year
+        pipeline.append({
+            "$project": {
+                "_id": 0,
+                "year": "$_id",
+                "average_price": {"$round": ["$average_price", 2]},
+                "book_count": 1
+            }
+        })
+        
+        return list(self.collection.aggregate(pipeline))
