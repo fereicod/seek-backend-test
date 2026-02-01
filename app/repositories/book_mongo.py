@@ -1,5 +1,8 @@
 from app.models.book import Book
+from app.schemas.book import BookRequest
 from typing import Any
+from uuid import uuid4
+
 
 class BookMongoRepository:
     """Repository for managing Book entities in MongoDB."""
@@ -8,27 +11,30 @@ class BookMongoRepository:
         """Initialize the repository with a MongoDB client."""
         self.collection = collection
 
-    def add_book(self, book: Book) -> str:
-        """Add a new book to the collection."""
-        book_dict = book.dict()
-        result = self.collection.insert_one(book_dict)
-        return str(result.inserted_id)
-
     def get_book_by_id(self, book_id: str) -> Book | None:
         """Retrieve a book by its ID."""
-        book_data = self.collection.find_one({"_id": book_id})
+        book_data = self.collection.find_one({"id": book_id})
         if book_data:
             return Book(**book_data)
         return None
 
-    def update_book(self, book_id: str, updated_data: dict) -> bool:
-        """Update an existing book's data."""
-        result = self.collection.update_one({"_id": book_id}, {"$set": updated_data})
-        return result.modified_count > 0
+    def create_book(self, book: BookRequest) -> Book:
+        """Create a new book and return the complete book with ID."""
+        book_data = book.model_dump()
+        book_data["id"] = str(uuid4())
+        self.collection.insert_one(book_data)
+        return Book(**book_data)
+
+    def update_book(self, book_id: str, updated_data: dict) -> tuple[bool, Book | None]:
+        """Update an existing book's data and return the updated book."""
+        result = self.collection.update_one({"id": book_id}, {"$set": updated_data})
+        if result.matched_count > 0:
+            return True, self.get_book_by_id(book_id)
+        return False, None
 
     def delete_book(self, book_id: str) -> bool:
         """Delete a book by its ID."""
-        result = self.collection.delete_one({"_id": book_id})
+        result = self.collection.delete_one({"id": book_id})
         return result.deleted_count > 0
 
     # ToDo: Implement additional methods as needed, e.g., list all books, skip, limit, aggregate functions, etc.
