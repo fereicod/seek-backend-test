@@ -1,5 +1,20 @@
 from pydantic import BaseModel
 from datetime import datetime
+from enum import Enum
+
+
+class SortField(str, Enum):
+    """Available fields for sorting."""
+    PUBLISHED_DATE = "published_date"
+    AUTHOR = "author"
+    PRICE = "price"
+    TITLE = "title"
+
+
+class SortOrder(str, Enum):
+    """Sort order direction."""
+    ASC = "asc"
+    DESC = "desc"
 
 
 class BookRequest(BaseModel):
@@ -35,3 +50,10 @@ class SuccessResponse(BaseModel):
 
 class BookMutationResponse(SuccessResponse):
     book: BookResponse | None = None
+
+
+class CursorPageResponse(BaseModel):
+    """Response schema for cursor-based pagination (no total count available)."""
+    items: list[BookResponse]
+    next_cursor: str | None = None
+    has_more: bool = False
