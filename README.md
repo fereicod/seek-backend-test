@@ -3,14 +3,6 @@
 ## Descripción
 Este es un sistema backend para la gestión de información de libros utilizando MongoDB como base de datos. El sistema proporciona una API REST construida con FastAPI para realizar operaciones CRUD completas y agregaciones avanzadas mediante pipelines de MongoDB.
 
-### Características del Sistema
-Cada libro contiene la siguiente información:
-- **title**: Título del libro
-- **author**: Autor del libro
-- **published_date**: Fecha de publicación
-- **genre**: Género literario
-- **price**: Precio del libro
-
 ### Funcionalidades Implementadas
 - ✅ **CRUD Completo**: Operaciones Create, Read, Update y Delete para libros
 - ✅ **Agregaciones MongoDB**: Pipeline de agregación para calcular el precio promedio de libros por año de publicación
@@ -134,6 +126,17 @@ Documentación alternativa disponible en:
 http://localhost:8000/redoc
 ```
 
+### 🚀 API Demo (Producción)
+
+> [!TIP]
+> **Prueba la API sin instalar nada**
+> 
+> La API está desplegada y disponible para probar directamente:
+> 
+> 👉 **[https://seek-backend-test.vercel.app/docs](https://seek-backend-test.vercel.app/docs)**
+> 
+> **Credenciales de prueba:** `admin@test.com` / `adminpass`
+
 ## Endpoints Principales
 
 ### Autenticación
@@ -212,6 +215,42 @@ seek-backend-test/
 └── README.md           # Este archivo
 ```
 
+## Diagrama general
+
+```mermaid
+graph TB
+    Client["👤 API Client<br/>(Postman / Swagger)"]
+    
+    subgraph FastAPI["⚡ FastAPI Books System"]
+        direction TB
+        
+        Router["🔌 API Routers<br/>• /api/v1/auth (login)<br/>• /api/v1/books (CRUD + Stats)"]
+        
+        Security["🔐 Security Layer<br/>• JWT Authentication<br/>• Permission Checks<br/>(book:read, book:create, book:update, book:delete)"]
+        
+        Repos["📦 Repository Layer<br/>• UserMongoRepository<br/>• BookMongoRepository<br/>• DB Selectors"]
+        
+        Logic["⚙️ Business Logic<br/>• Pagination (Page/Offset)<br/>• Sorting & Filtering<br/>• MongoDB Aggregation Pipeline"]
+    end
+    
+    Database[("🍃 MongoDB<br/>• users collection<br/>• books collection")]
+    
+    Client -->|"HTTPS/REST"| Router
+    Router --> Security
+    Security --> Repos
+    Repos --> Logic
+    Logic --> Database
+    Repos --> Database
+
+    style Client fill:#E3F2FD,stroke:#1976D2,stroke-width:2px,color:#000
+    style FastAPI fill:#FFF3E0,stroke:#F57C00,stroke-width:3px,color:#000
+    style Database fill:#E8F5E9,stroke:#388E3C,stroke-width:3px,color:#000
+    style Router fill:#BBDEFB,stroke:#1976D2,color:#000
+    style Security fill:#FFCCBC,stroke:#E64A19,color:#000
+    style Repos fill:#FFE082,stroke:#F57C00,color:#000
+    style Logic fill:#C5E1A5,stroke:#689F38,color:#000
+```
+
 ## Uso de la API
 
 ### Ejemplo: Autenticación
@@ -256,136 +295,40 @@ RATE_LIMIT_WINDOW=60
 
 ## Arquitectura del Proyecto
 
-Este proyecto implementa una **arquitectura híbrida** que combina principios de **Clean Architecture** con **Arquitectura por Capas**, optimizada para FastAPI.
+Arquitectura híbrida: **Clean Architecture + Capas**, optimizada para FastAPI.
 
-### Ventajas de esta Arquitectura
+**Capas:** Routers → Schemas → Repositories → Models → Core
 
-**Clean Architecture + Arquitectura por Capas:**
-- **Separación de responsabilidades**: Cada capa tiene una responsabilidad clara y definida
-- **Independencia de frameworks**: La lógica de negocio no depende de FastAPI directamente
-- **Testabilidad**: Las capas se pueden probar de forma aislada
-- **Mantenibilidad**: El código es más fácil de mantener y escalar
-- **Flexibilidad de base de datos**: Los selectores de DB permiten cambiar gestores sin afectar la lógica
-
-### Capas del Proyecto
-
-1. **Routers (Presentación)**: Maneja las solicitudes HTTP y respuestas
-2. **Schemas (Contratos)**: Define la estructura de entrada/salida de datos
-3. **Repositories (Acceso a Datos)**: Abstrae las operaciones de base de datos
-4. **Models (Dominio)**: Representa las entidades del negocio
-5. **Core (Infraestructura)**: Configuración, seguridad, utilidades
-
-### Selectores de Base de Datos
-
-El proyecto incluye **selectores de DB** que permiten:
-- Usar diferentes gestores de base de datos por entidad
-- Ejemplo: Tokens en Redis, Books en MongoDB, Users en MySQL (esto es poco comun pero flexible)
-- Facilita la migración y escalabilidad del sistema
+**Ventajas:** Separación de responsabilidades, testabilidad, flexibilidad de DB (selectores permiten intercambiar gestores por entidad)
 
 ## Mejoras Futuras
 
-- [ ] **Gestión de Tokens**: Implementar endpoints para refresh token, logout y logout all (actualmente solo login)
-- [ ] **Rate Limiting**: Implementar protección contra ataques DoS/DDoS con límites por IP y usuario
-- [ ] **Paginación Múltiple**: Implementar soporte de limit-offset y cursor-based pagination además de page-based
-- [ ] **Pruebas de Integración**: Ampliar cobertura de pruebas (actualmente ~32%) para cubrir más escenarios
-- [ ] **Códigos de estado HTTP correctos**: Actualmente algunos endpoints retornan HTTP 500 en escenarios que deberían usar códigos más específicos (ej: 404 Not Found cuando un libro no existe, etc). Se debe implementar manejo de excepciones personalizado por cada caso
-- [ ] **Validación de usuario activo**: Aunque el token JWT sea válido, falta verificar que el usuario esté activo en base de datos antes de procesar cada request. Agregar middleware o dependencia que valide `user.is_active` en cada endpoint protegido
-- [ ] **Sistema de roles completo**: Actualmente tenemos permisos básicos a nivel granular, falta implementar:
-  - Grupos de permisos (roles como Admin, Editor, Viewer)
-  - Validación por roles además de permisos individuales
-  - Jerarquía de roles con herencia de permisos
-- [ ] **Caché con Redis**: Implementar caché para consultas frecuentes y mejorar rendimiento
-- [ ] **Patrón Strategy para DB**: Implementar patrón estrategia en los selectores de repositorio para elegir dinámicamente el tipo de base de datos por cada entidad (Redis, MySQL, MongoDB)
-- [ ] **Logging estructurado**: Agregar logs detallados con niveles y rotación
-- [ ] **Dockerización completa**: Crear Dockerfile y docker-compose para facilitar el despliegue
-- [ ] **Health checks**: Endpoints para monitorear el estado de la aplicación y dependencias
+- [ ] Gestión de Tokens (refresh, logout)
+- [ ] Rate Limiting
+- [ ] Paginación cursor-based y limit-offset
+- [ ] Ampliar cobertura de pruebas (~32% actual)
+- [ ] Códigos HTTP específicos (404, 422, 429)
+- [ ] Validación de usuario activo en cada request
+- [ ] Sistema de roles con jerarquía
+- [ ] Caché con Redis
+- [ ] Dockerización y Health checks
 
-## Dudas y Comentarios sobre el Reto Técnico
+## Notas sobre el Reto Técnico
 
 ### 1. Migración con Django
-**Pregunta del reto:** *"Proporciona datos de prueba iniciales para al menos 5 libros utilizando un script de migración para la BD (podrías usar Django para esto)."*
+**Decisión:** No se usó Django. Se implementó `app/migrations/seed.py` con PyMongo, manteniendo coherencia con el stack FastAPI.
 
-**Decisión tomada:** No se utilizó Django para las migraciones.
+### 2. Autenticación JWT
+**Decisión:** JWT con bcrypt + sistema de permisos granular (`book:read`, `book:create`, etc.). Preparado para escalar a roles.
 
-**Razón:**
-- El proyecto está construido completamente en **FastAPI**, que es un framework moderno y ligero para APIs
-- Introducir Django solo para migraciones añadiría una dependencia pesada e innecesaria
-- Se implementó un **script de seed data** (`app/migrations/seed.py`) que cumple el mismo propósito de manera más eficiente y consistente con el stack tecnológico
-- El script de migración utiliza directamente **PyMongo** para insertar los datos de prueba, manteniendo la coherencia con el resto del proyecto
+### 3. Arquitectura
+**Decisión:** Híbrido Clean Architecture + Capas. Ver diagrama y sección "Arquitectura del Proyecto" arriba.
 
-### 2. Implementación de Autenticación JWT y Usuarios
-**Observación:** El reto solicita "implementar autenticación de usuarios utilizando Token Authentication".
+### 4. Códigos HTTP
+**Estado:** Implementación básica. Falta 404, 422, 429. Ver "Mejoras Futuras".
 
-**Decisión tomada:** Se implementó un **sistema completo de autenticación JWT** con las siguientes características:
-
-- **Modelo de Usuario**: Email, password hasheado con bcrypt, y sistema de permisos
-- **Sistema de Permisos**: Control de acceso a endpoints basado en permisos del usuario (ejemplo: `books:read`, `books:write`, `books:delete`)
-
-**Ventajas de este enfoque:**
-- Mayor seguridad con tokens de corta duración
-- Control granular de permisos por endpoint
-- Preparado para escalar a un sistema de roles completo
-
-### 3. Arquitectura del Proyecto
-**Decisión:** Implementar una arquitectura híbrida que combina **Clean Architecture** y **Arquitectura por Capas**.
-
-**De Clean Architecture:**
-- ✅ Separación de responsabilidades por capas
-- ✅ Independencia de frameworks (la lógica no está acoplada a FastAPI)
-- ✅ Inversión de dependencias (repositories abstraen el acceso a datos)
-- ✅ Entidades de dominio (models) independientes
-
-**De Arquitectura por Capas:**
-- ✅ Capas bien definidas: Presentación → Aplicación → Dominio → Infraestructura
-- ✅ Comunicación unidireccional entre capas
-- ✅ Cada capa tiene responsabilidades específicas
-
-**Ventajas de esta arquitectura híbrida:**
-1. **Mantenibilidad**: Código organizado y fácil de navegar
-2. **Testabilidad**: Cada capa se puede probar de forma aislada (mocking de repositories)
-3. **Escalabilidad**: Fácil agregar nuevas funcionalidades sin afectar código existente
-4. **Flexibilidad**: Los selectores de DB permiten cambiar tecnologías sin reescribir lógica
-5. **Colaboración**: Estructura clara facilita el trabajo en equipo
-6. **Pragmatismo**: No es tan rígida como Clean Architecture pura, pero mantiene sus beneficios
-
-### 4. Códigos de Estado HTTP y Manejo de Errores
-**Estado actual:** El proyecto tiene una implementación básica de manejo de errores.
-
-**Problemas identificados:**
-- Algunos endpoints retornan **HTTP 500** (Internal Server Error) en escenarios que deberían usar códigos más específicos
-- Ejemplo: `GET /api/v1/books/{id}` retorna 500 cuando el libro no existe, pero debería retornar **404 Not Found**
-- Falta manejo de excepciones personalizado para diferentes escenarios
-
-**Mejora propuesta:**
-```python
-# Implementar excepciones personalizadas
-class BookNotFoundException(HTTPException):
-    def __init__(self, book_id: str):
-        super().__init__(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Book with id {book_id} not found"
-        )
-```
-
-**Códigos HTTP que deberían implementarse:**
-- ✅ `200 OK` - Operación exitosa
-- ✅ `201 Created` - Recurso creado exitosamente
-- ⚠️ `400 Bad Request` - Request mal formado (parcialmente implementado)
-- ⚠️ `401 Unauthorized` - Token inválido o ausente (implementado)
-- ⚠️ `403 Forbidden` - Usuario sin permisos (implementado)
-- ❌ `404 Not Found` - Recurso no encontrado (falta implementar)
-- ❌ `409 Conflict` - Conflicto (ej: duplicados)
-- ❌ `422 Unprocessable Entity` - Validación de datos fallida
-- ❌ `429 Too Many Requests` - Rate limit excedido (falta implementar)
-- ⚠️ `500 Internal Server Error` - Error del servidor (actualmente usado en exceso)
-
-### 5. Validación de Usuario Activo
-**Estado actual:** El sistema valida que el JWT sea válido y que el usuario tenga los permisos necesarios.
-
-**Vulnerabilidad identificada:**
-- Aunque el token sea válido, **no se verifica que el usuario siga activo** en la base de datos
-- Escenario problemático: Un administrador desactiva un usuario, pero sus tokens siguen funcionando hasta que expiren
-- Solo se verifica la firma y expiración del JWT, no el estado actual del usuario
+### 5. Validación de Usuario
+**Pendiente:** Verificar `user.is_active` en cada request (actualmente solo valida JWT).
 
 
 ## Contacto y Soporte
